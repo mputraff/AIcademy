@@ -4,11 +4,25 @@ import swaggerJSDoc from "swagger-jsdoc";
 import swaggerUi from "swagger-ui-express";
 import * as dotenv from 'dotenv';
 import authRoutes from "./routes/auth.js";
+import cors from 'cors';
+
 
 dotenv.config();
 
 const app = express();
+app.use(cors());
 app.use(express.json());
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+    console.error(err.stack);
+    res.status(500).json({ error: 'Something went wrong!' });
+  });
+  
+  // Health check endpoint
+  app.get('/', (req, res) => {
+    res.json({ message: 'API is running' });
+  });
 
 // Konfigurasi Swagger untuk Railway
 const swaggerOptions = {
@@ -21,7 +35,7 @@ const swaggerOptions = {
     },
     servers: [
         {
-          url: process.env.RAILWAY_URL || "http://localhost:3000", // Gunakan environment variable
+          url: "https://aicademy-production.up.railway.app", // Gunakan environment variable
           description: "Production server",
         },
         {
