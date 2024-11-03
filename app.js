@@ -27,7 +27,7 @@ app.use("/api/auth", authRoutes);
 // Fungsi untuk koneksi MongoDB dengan penanganan error
 const connectToMongoDB = async () => {
   try {
-    await mongoose.connect("mongodb://localhost:27017/AIcademy");
+    await mongoose.connect(process.env.MONGO_URI);
     console.log("Connected to MongoDB successfully");
   } catch (error) {
     console.error("Failed to connect to MongoDB:", error);
@@ -47,11 +47,12 @@ mongoose.connection.on("error", (err) => {
 
 // Memulai server setelah berhasil terhubung ke MongoDB
 const startServer = async () => {
-  await connectToMongoDB();
-
-  app.listen(3000, () => {
-    console.log("Server is running on port 3000");
-  });
-};
+    await connectToMongoDB();
+  
+    const port = process.env.PORT || 3000; // Gunakan PORT dari environment atau default ke 3000
+    app.listen(port, () => {
+      console.log(`Server is running on port ${port}`);
+    });
+  };
 
 startServer();
