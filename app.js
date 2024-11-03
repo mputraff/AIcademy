@@ -20,11 +20,15 @@ const swaggerOptions = {
       description: "API Documentation for Authentication Service",
     },
     servers: [
-      {
-        url: "https://your-api-name.up.railway.app", // Ganti dengan URL Railway Anda
-        description: "Production server",
-      }
-    ],
+        {
+          url: process.env.RAILWAY_URL || "http://localhost:3000", // Gunakan environment variable
+          description: "Production server",
+        },
+        {
+          url: "http://localhost:3000", // Tambahkan localhost untuk development
+          description: "Development server",
+        }
+      ],
     components: {
       securitySchemes: {
         bearerAuth: {
