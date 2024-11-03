@@ -2,59 +2,70 @@ import express from "express";
 import mongoose from "mongoose";
 import swaggerJSDoc from "swagger-jsdoc";
 import swaggerUi from "swagger-ui-express";
+import * as dotenv from 'dotenv';
 import authRoutes from "./routes/auth.js";
-import dotenv from 'dotenv';
+
 dotenv.config();
 
 const app = express();
 app.use(express.json());
 
+// Konfigurasi Swagger untuk Railway
 const swaggerOptions = {
-  swaggerDefinition: {
+  definition: {
     openapi: "3.0.0",
     info: {
-      title: "Auth API",
+      title: "Auth API Documentation",
       version: "1.0.0",
-      description: "API for user registration and login",
+      description: "API Documentation for Authentication Service",
     },
+    servers: [
+      {
+        url: "https://your-api-name.up.railway.app", // Ganti dengan URL Railway Anda
+        description: "Production server",
+      }
+    ],
+    components: {
+      securitySchemes: {
+        bearerAuth: {
+          type: "http",
+          scheme: "bearer",
+          bearerFormat: "JWT",
+        },
+      },
+    },
+    security: [{
+      bearerAuth: [],
+    }],
   },
-  apis: ["./routes/auth.js"],
+  apis: ["./routes/*.js"],
 };
 
 const swaggerDocs = swaggerJSDoc(swaggerOptions);
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
+// Routes
 app.use("/api/auth", authRoutes);
 
-// Fungsi untuk koneksi MongoDB dengan penanganan error
+// MongoDB Connection (menggunakan Railway MongoDB URI)
 const connectToMongoDB = async () => {
   try {
     await mongoose.connect(process.env.MONGO_URI);
     console.log("Connected to MongoDB successfully");
   } catch (error) {
     console.error("Failed to connect to MongoDB:", error);
-    process.exit(1); // Keluar dari proses jika koneksi gagal
+    process.exit(1);
   }
 };
 
-// Menangani event disconnect
-mongoose.connection.on("disconnected", () => {
-  console.log("MongoDB disconnected");
-});
-
-// Menangani event error
-mongoose.connection.on("error", (err) => {
-  console.error("MongoDB connection error:", err);
-});
-
-// Memulai server setelah berhasil terhubung ke MongoDB
+// Start server
 const startServer = async () => {
-    await connectToMongoDB();
+  await connectToMongoDB();
   
-    const port = process.env.PORT || 3000; // Gunakan PORT dari environment atau default ke 3000
-    app.listen(port, () => {
-      console.log(`Server is running on port ${port}`);
-    });
-  };
+  const port = process.env.PORT || 3000;
+  app.listen(port, () => {
+    console.log(`Server is running on port ${port}`);
+  });
+};
 
 startServer();
