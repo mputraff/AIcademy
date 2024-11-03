@@ -23,7 +23,7 @@ app.get("/", (req, res) => {
   res.json({ message: "API is running" });
 });
 
-const baseUrl = process.env.BASE_URL || "http://localhost:3000";
+const baseUrl = process.env.BASE_URL || "http://localhost:8080";
 
 // Konfigurasi Swagger untuk Railway
 const swaggerOptions = {
