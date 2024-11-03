@@ -6,7 +6,6 @@ import * as dotenv from 'dotenv';
 import authRoutes from "./routes/auth.js";
 import cors from 'cors';
 
-
 dotenv.config();
 
 const app = express();
@@ -24,40 +23,38 @@ app.use((err, req, res, next) => {
     res.json({ message: 'API is running' });
   });
 
+const baseUrl = process.env.BASE_URL || "http://localhost:3000";
+
 // Konfigurasi Swagger untuk Railway
 const swaggerOptions = {
-  definition: {
-    openapi: "3.0.0",
-    info: {
-      title: "Auth API Documentation",
-      version: "1.0.0",
-      description: "API Documentation for Authentication Service",
-    },
-    servers: [
+    definition: {
+      openapi: "3.0.0",
+      info: {
+        title: "Auth API Documentation",
+        version: "1.0.0",
+        description: "API Documentation for Authentication Service",
+      },
+      servers: [
         {
-          url: "https://aicademy-production.up.railway.app", // Gunakan environment variable
-          description: "Production server",
+          url: baseUrl,
+          description: "Current environment server",
         },
-        {
-          url: "http://localhost:3000", // Tambahkan localhost untuk development
-          description: "Development server",
-        }
       ],
-    components: {
-      securitySchemes: {
-        bearerAuth: {
-          type: "http",
-          scheme: "bearer",
-          bearerFormat: "JWT",
+      components: {
+        securitySchemes: {
+          bearerAuth: {
+            type: "http",
+            scheme: "bearer",
+            bearerFormat: "JWT",
+          },
         },
       },
+      security: [{
+        bearerAuth: [],
+      }],
     },
-    security: [{
-      bearerAuth: [],
-    }],
-  },
-  apis: ["./routes/*.js"],
-};
+    apis: ["./routes/*.js"],
+  };
 
 const swaggerDocs = swaggerJSDoc(swaggerOptions);
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
