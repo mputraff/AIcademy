@@ -49,14 +49,18 @@ app.use("/api/auth", authRoutes);
 
 // MongoDB Connection (menggunakan Railway MongoDB URI)
 const connectToMongoDB = async () => {
-  try {
-    await mongoose.connect(process.env.MONGO_URI);
-    console.log("Connected to MongoDB successfully");
-  } catch (error) {
-    console.error("Failed to connect to MongoDB:", error);
-    process.exit(1);
-  }
-};
+    try {
+      const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/AIcademy';
+      await mongoose.connect(mongoURI, {
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+      });
+      console.log('Connected to MongoDB');
+    } catch (error) {
+      console.error('Failed to connect to MongoDB:', error);
+      throw error;
+    }
+  };
 
 // Start server
 const startServer = async () => {
