@@ -68,7 +68,7 @@ app.use("/api/auth", authRoutes);
 // MongoDB Connection (menggunakan Railway MongoDB URI)
 const connectToMongoDB = async () => {
     try {
-      const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/AIcademy';
+      const mongoURI = process.env.MONGODB_URI;
       // Hapus options yang deprecated
       await mongoose.connect(mongoURI);
       console.log('Connected to MongoDB');
