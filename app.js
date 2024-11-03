@@ -69,10 +69,8 @@ app.use("/api/auth", authRoutes);
 const connectToMongoDB = async () => {
     try {
       const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/AIcademy';
-      await mongoose.connect(mongoURI, {
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
-      });
+      // Hapus options yang deprecated
+      await mongoose.connect(mongoURI);
       console.log('Connected to MongoDB');
     } catch (error) {
       console.error('Failed to connect to MongoDB:', error);
