@@ -3,6 +3,7 @@ import express from "express";
 import bcrypt from "bcryptjs";
 import multer from "multer";
 import User from "../models/User.js";
+import authenticateToken from "../middleware/authenticateToken.js";
 import { nanoid } from "nanoid";
 
 const router = express.Router();
