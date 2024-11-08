@@ -3,6 +3,7 @@ import express from "express";
 import bcrypt from "bcryptjs";
 import multer from "multer";
 import User from "../models/User.js";
+import { nanoid } from "nanoid";
 
 const router = express.Router();
 const upload = multer({
@@ -47,9 +48,28 @@ router.post("/register", async (req, res) => {
   const { name, email, password } = req.body;
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
-    const user = new User({ name, email, password: hashedPassword });
+    const user = new User({ 
+      id: nanoid(),
+      name, 
+      email, 
+      password: hashedPassword, 
+      createdAt: new Date().toDateString, 
+      updateAt: new Date().toDateString },
+    );
     await user.save();
-    res.status(201).json({ message: "User registered successfully" });
+    res.status(201).json(
+      { 
+        status : "success",
+        message: "User registered successfully",
+        data : {
+          id : user.id,
+          name : user.name,
+          email : user.email,
+          createdAt : user.createdAt,
+          updateAt : user.updateAt
+        }
+       },
+    );
   } catch (error) {
     res.status(500).json({ error: "Error registering user" });
   }
@@ -85,7 +105,18 @@ router.post("/login", async (req, res) => {
   try {
     const user = await User.findOne({ email });
     if (user && (await bcrypt.compare(password, user.password))) {
-      res.json({ message: "Login successful" });
+      res.json(
+        { status : "success",
+          message: "Login successfully",
+          data : {
+            id : user.id,
+            name : user.name,
+            email : user.email,
+            password : user.password,
+            createdAt : user.createdAt,
+            updateAt : user.updateAt
+          }}
+      );
     } else {
       res.status(401).json({ error: "Invalid credentials" });
     }
