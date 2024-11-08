@@ -50,13 +50,13 @@ router.post("/register", async (req, res) => {
   const { name, email, password } = req.body;
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
-    const user = new User({ 
+    const user = new User({
       id: nanoid(),
-      name, 
-      email, 
-      password: hashedPassword, 
-      createdAt: new Date().toDateString(), 
-      updatedAt: new Date().toDateString() 
+      name,
+      email,
+      password: hashedPassword,
+      createdAt: new Date().toDateString(),
+      updatedAt: new Date().toDateString(),
     });
 
     await user.save();
@@ -68,8 +68,8 @@ router.post("/register", async (req, res) => {
         name: user.name,
         email: user.email,
         createdAt: user.createdAt,
-        updatedAt: user.updatedAt
-      }
+        updatedAt: user.updatedAt,
+      },
     });
   } catch (error) {
     console.error("Error during registration:", error); // Menampilkan error di console log
@@ -107,22 +107,25 @@ router.post("/login", async (req, res) => {
   try {
     const user = await User.findOne({ email });
     if (user && (await bcrypt.compare(password, user.password))) {
-
-      const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: "1h" });
-
-      res.json(
-        { status : "success",
-          message: "Login successfully",
-          token,
-          data : {
-            id : user.id,
-            name : user.name,
-            email : user.email,
-            password : user.password,
-            createdAt : user.createdAt,
-            updateAt : user.updateAt
-          }}
+      const token = jwt.sign(
+        { id: user.id, name: user.name },
+        process.env.JWT_SECRET,
+        { expiresIn: "1h" } // Token akan kedaluwarsa dalam 1 jam
       );
+
+      res.json({
+        status: "success",
+        message: "Login successfully",
+        token,
+        data: {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          password: user.password,
+          createdAt: user.createdAt,
+          updateAt: user.updateAt,
+        },
+      });
     } else {
       res.status(401).json({ error: "Invalid credentials" });
     }
@@ -161,30 +164,35 @@ router.post("/login", async (req, res) => {
  *       500:
  *         description: Error updating profile
  */
-router.patch("/edit-profile", authenticateToken, upload.single("profilePicture"), async (req, res) => {
-  const { name, email, password } = req.body;
-  const userId = req.user.id; // Sesuaikan dengan sistem autentikasi Anda
-  try {
-    const user = await User.findById(userId);
-    if (!user) {
-      return res.status(404).json({ error: "User not found" });
-    }
+router.patch(
+  "/edit-profile",
+  authenticateToken,
+  upload.single("profilePicture"),
+  async (req, res) => {
+    const { name, email, password } = req.body;
+    const userId = req.user.id; // Sesuaikan dengan sistem autentikasi Anda
+    try {
+      const user = await User.findById(userId);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
 
-    // Update nama, email, dan password jika diberikan
-    if (name) user.name = name;
-    if (email) user.email = email;
-    if (password) user.password = await bcrypt.hash(password, 10);
-    
-    // Jika ada file foto profil, simpan ke database
-    if (req.file) {
-      user.profilePicture = req.file.buffer;
-    }
+      // Update nama, email, dan password jika diberikan
+      if (name) user.name = name;
+      if (email) user.email = email;
+      if (password) user.password = await bcrypt.hash(password, 10);
 
-    await user.save();
-    res.json({ message: "User profile updated successfully" });
-  } catch (error) {
-    res.status(500).json({ error: "Error updating profile" });
+      // Jika ada file foto profil, simpan ke database
+      if (req.file) {
+        user.profilePicture = req.file.buffer;
+      }
+
+      await user.save();
+      res.json({ message: "User profile updated successfully" });
+    } catch (error) {
+      res.status(500).json({ error: "Error updating profile" });
+    }
   }
-});
+);
 
 export default router;
