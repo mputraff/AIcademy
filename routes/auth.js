@@ -47,14 +47,19 @@ const upload = multer({
 router.post("/register", async (req, res) => {
   const { name, email, password } = req.body;
   try {
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(409).json({ error: "User already exists" });
+    };
     const hashedPassword = await bcrypt.hash(password, 10);
     const user = new User({ 
       id: nanoid(),
       name, 
       email, 
       password: hashedPassword, 
-      createdAt: new Date().toDateString, 
-      updateAt: new Date().toDateString },
+      createdAt: new Date().toDateString(), 
+      updateAt: new Date().toDateString(), 
+    },
     );
     await user.save();
     res.status(201).json(
