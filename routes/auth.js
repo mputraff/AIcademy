@@ -157,7 +157,7 @@ router.post("/login", async (req, res) => {
  */
 router.patch("/edit-profile", upload.single("profilePicture"), async (req, res) => {
   const { name, email, password } = req.body;
-  const userId = req.user._id; // Sesuaikan dengan sistem autentikasi Anda
+  const userId = req.user.id; // Sesuaikan dengan sistem autentikasi Anda
   try {
     const user = await User.findById(userId);
     if (!user) {
