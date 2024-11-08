@@ -156,7 +156,7 @@ router.post("/login", async (req, res) => {
  *       500:
  *         description: Error updating profile
  */
-router.patch("/edit-profile", upload.single("profilePicture"), async (req, res) => {
+router.patch("/edit-profile", authenticateToken, upload.single("profilePicture"), async (req, res) => {
   const { name, email, password } = req.body;
   const userId = req.user.id; // Sesuaikan dengan sistem autentikasi Anda
   try {
