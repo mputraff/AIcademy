@@ -3,6 +3,7 @@ import express from "express";
 import bcrypt from "bcryptjs";
 import multer from "multer";
 import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
 import User from "../models/User.js";
 import authenticateToken from "../middleware/authenticateToken.js";
 import { nanoid } from "nanoid";
@@ -51,7 +52,6 @@ router.post("/register", async (req, res) => {
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
     const user = new User({
-      id: nanoid(),
       name,
       email,
       password: hashedPassword,
@@ -64,7 +64,7 @@ router.post("/register", async (req, res) => {
       status: "success",
       message: "User registered successfully",
       data: {
-        id: user.id,
+        id: user._id,
         name: user.name,
         email: user.email,
         createdAt: user.createdAt,
@@ -118,7 +118,7 @@ router.post("/login", async (req, res) => {
         message: "Login successfully",
         token,
         data: {
-          id: user.id,
+          id: user._id,
           name: user.name,
           email: user.email,
           password: user.password,
@@ -170,14 +170,14 @@ router.patch(
   upload.single("profilePicture"),
   async (req, res) => {
     const { name, email, password } = req.body;
-    const userId = req.user.id; // Sesuaikan dengan sistem autentikasi Anda
+    const userId = mongoose.Types.ObjectId(req.user.id)
     try {
       const user = await User.findById(userId);
       if (!user) {
-        console.log("user tidak ditemukan")
+        console.log("user tidak ditemukan");
         return res.status(404).json({ error: "User not found" });
       }
-      console.log("User ditemukan", user)
+      console.log("User ditemukan", user);
 
       // Update nama, email, dan password jika diberikan
       if (name) user.name = name;
