@@ -47,10 +47,6 @@ const upload = multer({
 router.post("/register", async (req, res) => {
   const { name, email, password } = req.body;
   try {
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(409).json({ error: "User already exists" });
-    };
     const hashedPassword = await bcrypt.hash(password, 10);
     const user = new User({ 
       id: nanoid(),
@@ -58,25 +54,23 @@ router.post("/register", async (req, res) => {
       email, 
       password: hashedPassword, 
       createdAt: new Date().toDateString(), 
-      updateAt: new Date().toDateString(), 
-    },
-    );
+      updatedAt: new Date().toDateString() 
+    });
+
     await user.save();
-    res.status(201).json(
-      { 
-        status : "success",
-        message: "User registered successfully",
-        data : {
-          id : user.id,
-          name : user.name,
-          email : user.email,
-          createdAt : user.createdAt,
-          updateAt : user.updateAt
-        }
-       },
-    );
+    res.status(201).json({
+      status: "success",
+      message: "User registered successfully",
+      data: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt
+      }
+    });
   } catch (error) {
-    console.error("Error during registration:", error);
+    console.error("Error during registration:", error); // Menampilkan error di console log
     res.status(500).json({ error: "Error registering user" });
   }
 });
