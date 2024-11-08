@@ -54,16 +54,14 @@ router.post("/register", async (req, res) => {
       name,
       email,
       password: hashedPassword,
-      createdAt: new Date().toDateString(),
-      updatedAt: new Date().toDateString(),
     });
 
     await user.save();
     res.status(201).json({
       status: "success",
-      message: "User registered successfully",
+      message: "User  registered successfully",
       data: {
-        id: user._id,
+        id: user._id, // Mengakses _id setelah user disimpan
         name: user.name,
         email: user.email,
         createdAt: user.createdAt,
@@ -169,9 +167,8 @@ router.patch(
   upload.single("profilePicture"),
   async (req, res) => {
     const { name, email, password } = req.body;
-    const userId = mongoose.Types.ObjectId(req.user.id)
     try {
-      const user = await User.findById(userId);
+      const user = await User.findById(req.user.id);
       if (!user) {
         console.log("user tidak ditemukan");
         return res.status(404).json({ error: "User not found" });

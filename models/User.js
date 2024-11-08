@@ -1,11 +1,6 @@
 import mongoose from "mongoose";
 
 const userSchema = new mongoose.Schema({
-    id : {
-        type : String,
-        unique : true,
-        required : true,
-    },
     name : {
         type : String, 
         required : true
@@ -19,7 +14,8 @@ const userSchema = new mongoose.Schema({
         type : String, 
         required : true},
     profilePicture : {
-        type: Buffer
+        type: Buffer,
+        default : null
     },
     createdAt : {
         type : String,
