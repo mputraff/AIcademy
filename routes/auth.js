@@ -2,6 +2,7 @@
 import express from "express";
 import bcrypt from "bcryptjs";
 import multer from "multer";
+import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 import authenticateToken from "../middleware/authenticateToken.js";
 import { nanoid } from "nanoid";
@@ -106,9 +107,13 @@ router.post("/login", async (req, res) => {
   try {
     const user = await User.findOne({ email });
     if (user && (await bcrypt.compare(password, user.password))) {
+
+      const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: "1h" });
+
       res.json(
         { status : "success",
           message: "Login successfully",
+          token,
           data : {
             id : user.id,
             name : user.name,
