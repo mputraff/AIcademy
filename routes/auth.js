@@ -1,9 +1,22 @@
 // routes/auth.js
 import express from "express";
-import bcrypt from 'bcryptjs';
+import bcrypt from "bcryptjs";
+import multer from "multer";
 import User from "../models/User.js";
 
 const router = express.Router();
+const upload = multer({
+  limits: {
+    fileSize: 1024 * 1024 * 5,
+  },
+
+  fileFilter(req, file, cb) {
+    if (!file.mimetype.startsWith("image/")) {
+      return cb(new Error("Please upload an image file"));
+    }
+    cb(null, true);
+  },
+});
 
 /**
  * @swagger
@@ -78,6 +91,62 @@ router.post("/login", async (req, res) => {
     }
   } catch (error) {
     res.status(500).json({ error: "Error logging in" });
+  }
+});
+
+/**
+ * @swagger
+ * /api/auth/edit-profile:
+ *   patch:
+ *     summary: Update user profile
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *               profilePicture:
+ *                 type: string
+ *                 format: binary
+ *     responses:
+ *       200:
+ *         description: User profile updated successfully
+ *       404:
+ *         description: User not found
+ *       500:
+ *         description: Error updating profile
+ */
+router.patch("/edit-profile", upload.single("profilePicture"), async (req, res) => {
+  const { name, email, password } = req.body;
+  const userId = req.user._id; // Sesuaikan dengan sistem autentikasi Anda
+  try {
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Update nama, email, dan password jika diberikan
+    if (name) user.name = name;
+    if (email) user.email = email;
+    if (password) user.password = await bcrypt.hash(password, 10);
+    
+    // Jika ada file foto profil, simpan ke database
+    if (req.file) {
+      user.profilePicture = req.file.buffer;
+    }
+
+    await user.save();
+    res.json({ message: "User profile updated successfully" });
+  } catch (error) {
+    res.status(500).json({ error: "Error updating profile" });
   }
 });
 
