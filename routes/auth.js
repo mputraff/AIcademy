@@ -174,8 +174,10 @@ router.patch(
     try {
       const user = await User.findById(userId);
       if (!user) {
+        console.log("user tidak ditemukan")
         return res.status(404).json({ error: "User not found" });
       }
+      console.log("User ditemukan", user)
 
       // Update nama, email, dan password jika diberikan
       if (name) user.name = name;
@@ -185,11 +187,14 @@ router.patch(
       // Jika ada file foto profil, simpan ke database
       if (req.file) {
         user.profilePicture = req.file.buffer;
+        console.log("Foto profil diperbarui.");
       }
 
       await user.save();
+      console.log("Profil user berhasil diperbarui.");
       res.json({ message: "User profile updated successfully" });
     } catch (error) {
+      console.log("Error saat memperbarui .", error);
       res.status(500).json({ error: "Error updating profile" });
     }
   }
