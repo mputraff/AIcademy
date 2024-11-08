@@ -6,7 +6,6 @@ import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
 import User from "../models/User.js";
 import authenticateToken from "../middleware/authenticateToken.js";
-import { nanoid } from "nanoid";
 
 const router = express.Router();
 const upload = multer({
@@ -52,7 +51,6 @@ router.post("/register", async (req, res) => {
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
     const user = new User({
-      id: user._id,
       name,
       email,
       password: hashedPassword,
