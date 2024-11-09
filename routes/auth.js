@@ -65,7 +65,9 @@ router.post("/register", async (req, res) => {
     await user.save();
 
     const transporter = nodemailer.createTransport({
-      service: 'Gmail',
+      host: "mail.aicade.my.id",
+      port: 465,
+      secure: false,
       auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.PASS_USER,
