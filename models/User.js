@@ -20,11 +20,11 @@ const userSchema = new mongoose.Schema({
     },
     otp: {
         type: Number,
-        required: true
+        required: false
     },
     otpExpires: {
         type: Date,
-        required: true
+        required: false
     }
 }, {
     timestamps: true 

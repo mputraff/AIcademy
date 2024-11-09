@@ -256,15 +256,15 @@ router.post("/verify-otp", async (req, res) => {
       return res.status(400).json({ error: "User not found" });
     }
 
-    // Check if OTP matches and is still valid
     if (user.otp !== otp || user.otpExpires < Date.now()) {
       return res.status(400).json({ error: "Invalid or expired OTP" });
     }
 
     // Mark the user as verified
     user.isVerified = true;
-    user.otp = undefined; // Clear OTP
-    user.otpExpires = undefined; // Clear OTP expiry
+    user.otp = null; // Clear OTP
+    user.otpExpires = null; // Clear OTP expiry
+   
     await user.save();
 
     res.status(200).json({ message: "OTP verified successfully" });
