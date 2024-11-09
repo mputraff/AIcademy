@@ -51,7 +51,7 @@ router.post("/register", async (req, res) => {
   const { name, email, password } = req.body;
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
-    const otp = Math.floor(100000 + Math.random() * 900000); // 6-digit OTP
+    const otp = Math.floor(1000 + Math.random() * 9000); // 6-digit OTP
     const otpExpires = new Date(Date.now() + 10 * 60 * 1000);
 
     const user = new User({
