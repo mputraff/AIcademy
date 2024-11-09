@@ -7,7 +7,7 @@ import mongoose from "mongoose";
 import nodemailer from "nodemailer";
 import User from "../models/User.js";
 import authenticateToken from "../middleware/authenticateToken.js";
- 
+
 const router = express.Router();
 const upload = multer({
   limits: {
@@ -59,7 +59,7 @@ router.post("/register", async (req, res) => {
       email,
       password: hashedPassword,
       otp,
-      otpExpires
+      otpExpires,
     });
 
     await user.save();
@@ -67,23 +67,26 @@ router.post("/register", async (req, res) => {
     const transporter = nodemailer.createTransport({
       host: "mail.aicade.my.id",
       port: 465,
-      secure: false,
+      secure: true,
       auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.PASS_USER,
-      }
+      },
+      debug: true, // Add this line for detailed logging
+      logger: true,
     });
 
     await transporter.sendMail({
       from: process.env.EMAIL_USER,
       to: email,
-      subject: 'Welcome to AIcademy',
-      text: `Hi ${name}, welcome to AIcademy!. Your otp is ${user.otp}`
-    })
+      subject: "Welcome to AIcademy",
+      text: `Hi ${name}, welcome to AIcademy!. Your otp is ${user.otp}`,
+    });
 
     res.status(201).json({
       status: "success",
-      message: "User registered successfully and your otp successfully sent. Please check your email.",
+      message:
+        "User registered successfully and your otp successfully sent. Please check your email.",
       data: {
         id: user._id, // Mengakses _id setelah user disimpan
         name: user.name,
@@ -260,7 +263,7 @@ router.post("/verify-otp", async (req, res) => {
 
     // Mark the user as verified
     user.isVerified = true;
-    user.otp = undefined;    // Clear OTP
+    user.otp = undefined; // Clear OTP
     user.otpExpires = undefined; // Clear OTP expiry
     await user.save();
 
@@ -270,6 +273,5 @@ router.post("/verify-otp", async (req, res) => {
     res.status(500).json({ error: "Error verifying OTP" });
   }
 });
-
 
 export default router;
