@@ -1,31 +1,19 @@
-// routes/auth.js
 import express from "express";
 import bcrypt from "bcryptjs";
-import multer from "multer";
 import jwt from "jsonwebtoken";
-import mongoose from "mongoose";
+import nodemailer from "nodemailer";
 import User from "../models/User.js";
-import authenticateToken from "../middleware/authenticateToken.js";
+import * as dotenv from "dotenv";
+
+dotenv.config();
 
 const router = express.Router();
-const upload = multer({
-  limits: {
-    fileSize: 1024 * 1024 * 5,
-  },
-
-  fileFilter(req, file, cb) {
-    if (!file.mimetype.startsWith("image/")) {
-      return cb(new Error("Please upload an image file"));
-    }
-    cb(null, true);
-  },
-});
 
 /**
  * @swagger
  * /api/auth/register:
  *   post:
- *     summary: Register a new user
+ *     summary: Register a new user and send OTP
  *     tags: [Auth]
  *     requestBody:
  *       required: true
@@ -49,28 +37,100 @@ const upload = multer({
 router.post("/register", async (req, res) => {
   const { name, email, password } = req.body;
   try {
+    // Hash the password
     const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Generate OTP (One Time Password)
+    const otp = Math.floor(100000 + Math.random() * 900000); // 6-digit OTP
+    const otpExpires = Date.now() + 10 * 60 * 1000; // OTP expires in 10 minutes
+
+    // Create user with hashed password, OTP and expiry time
     const user = new User({
       name,
       email,
       password: hashedPassword,
+      otp,
+      otpExpires,
     });
 
+    // Save user to the database
     await user.save();
-    res.status(201).json({
-      status: "success",
-      message: "User  registered successfully",
-      data: {
-        id: user._id, // Mengakses _id setelah user disimpan
-        name: user.name,
-        email: user.email,
-        createdAt: user.createdAt,
-        updatedAt: user.updatedAt,
+
+    // Create transporter for sending OTP email
+    const transporter = nodemailer.createTransport({
+      service: "Gmail",
+      auth: {
+        user: process.env.EMAIL_USER,  // Ensure this is correct in .env
+        pass: process.env.EMAIL_PASS,   // Ensure this is correct in .env
       },
     });
+
+    // Send OTP email to the user
+    await transporter.sendMail({
+      from: process.env.EMAIL_USER,
+      to: user.email,
+      subject: "Your OTP Code",
+      text: `Your OTP is ${otp}. It will expire in 10 minutes.`,
+    });
+
+    res.status(201).json({
+      status: "success",
+      message: "User registered successfully. OTP sent to email.",
+    });
   } catch (error) {
-    console.error("Error during registration:", error); // Menampilkan error di console log
+    console.error("Error during registration:", error);
     res.status(500).json({ error: "Error registering user" });
+  }
+});
+
+/**
+ * @swagger
+ * /api/auth/verify-otp:
+ *   post:
+ *     summary: Verify OTP for user registration
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *               otp:
+ *                 type: number
+ *     responses:
+ *       200:
+ *         description: OTP verified successfully
+ *       400:
+ *         description: Invalid or expired OTP
+ */
+router.post("/verify-otp", async (req, res) => {
+  const { email, otp } = req.body;
+  try {
+    // Find the user by email
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(400).json({ error: "User not found" });
+    }
+
+    // Check if OTP matches and is still valid
+    if (user.otp !== otp || user.otpExpires < Date.now()) {
+      return res.status(400).json({ error: "Invalid or expired OTP" });
+    }
+
+    // Mark the user as verified
+    user.isVerified = true;
+    user.otp = undefined;    // Clear OTP
+    user.otpExpires = undefined; // Clear OTP expiry
+    await user.save();
+
+    res.status(200).json({ message: "OTP verified successfully" });
+  } catch (error) {
+    console.error("Error during OTP verification:", error);
+    res.status(500).json({ error: "Error verifying OTP" });
   }
 });
 
@@ -96,104 +156,28 @@ router.post("/register", async (req, res) => {
  *         description: Login successful
  *       401:
  *         description: Invalid credentials
- *       500:
- *         description: Error logging in
  */
 router.post("/login", async (req, res) => {
   const { email, password } = req.body;
   try {
     const user = await User.findOne({ email });
-    if (user && (await bcrypt.compare(password, user.password))) {
-      const token = jwt.sign(
-        { id: user.id, name: user.name },
-        process.env.JWT_SECRET,
-        { expiresIn: "1h" } // Token akan kedaluwarsa dalam 1 jam
-      );
 
-      res.json({
-        status: "success",
-        message: "Login successfully",
-        token,
-        data: {
-          id: user._id,
-          name: user.name,
-          email: user.email,
-          password: user.password,
-          createdAt: user.createdAt,
-          updateAt: user.updateAt,
-        },
-      });
-    } else {
-      res.status(401).json({ error: "Invalid credentials" });
+    if (!user || !(await bcrypt.compare(password, user.password))) {
+      return res.status(401).json({ error: "Invalid credentials" });
     }
+
+    if (!user.isVerified) {
+      return res.status(401).json({ error: "Account not verified" });
+    }
+
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+      expiresIn: "1h",
+    });
+
+    res.json({ message: "Login successful", token });
   } catch (error) {
     res.status(500).json({ error: "Error logging in" });
   }
 });
-
-/**
- * @swagger
- * /api/auth/edit-profile:
- *   patch:
- *     summary: Update user profile
- *     tags: [Auth]
- *     requestBody:
- *       required: true
- *       content:
- *         multipart/form-data:
- *           schema:
- *             type: object
- *             properties:
- *               name:
- *                 type: string
- *               email:
- *                 type: string
- *               password:
- *                 type: string
- *               profilePicture:
- *                 type: string
- *                 format: binary
- *     responses:
- *       200:
- *         description: User profile updated successfully
- *       404:
- *         description: User not found
- *       500:
- *         description: Error updating profile
- */
-router.patch(
-  "/edit-profile",
-  authenticateToken,
-  upload.single("profilePicture"),
-  async (req, res) => {
-    const { name, email, password } = req.body;
-    try {
-      const user = await User.findById(req.user.id);
-      if (!user) {
-        console.log("user tidak ditemukan");
-        return res.status(404).json({ error: "User not found" });
-      }
-      console.log("User ditemukan", user);
-
-      // Update nama, email, dan password jika diberikan
-      if (name) user.name = name;
-      if (email) user.email = email;
-      if (password) user.password = await bcrypt.hash(password, 10);
-
-      // Jika ada file foto profil, simpan ke database
-      if (req.file) {
-        user.profilePicture = req.file.buffer;
-        console.log("Foto profil diperbarui.");
-      }
-
-      await user.save();
-      console.log("Profil user berhasil diperbarui.");
-      res.json({ message: "User profile updated successfully" });
-    } catch (error) {
-      console.log("Error saat memperbarui .", error);
-      res.status(500).json({ error: "Error updating profile" });
-    }
-  }
-);
 
 export default router;

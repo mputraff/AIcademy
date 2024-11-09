@@ -25,7 +25,7 @@ app.get("/", (req, res) => {
 
 const baseUrl = process.env.BASE_URL || "http://localhost:8080";
 
-// Konfigurasi Swagger untuk Railway
+// Konfigurasi Swagger
 const swaggerOptions = {
   definition: {
     openapi: "3.0.0",
@@ -64,30 +64,30 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 // Routes
 app.use("/api/auth", authRoutes);
 
-// MongoDB Connection (menggunakan Railway MongoDB URI)
+// MongoDB Connection (using Railway MongoDB URI)
 const connectToMongoDB = async () => {
-    try {
-        const mongoURI = process.env.MONGODB_URI;
-        if (!mongoURI) {
-            throw new Error('MONGODB_URI is not defined');
-        }
-        await mongoose.connect(mongoURI, {
-            serverSelectionTimeoutMS: 5000
-        });
-        console.log('Connected to MongoDB');
-    } catch (error) {
-        console.error('MongoDB connection error:', error);
-        process.exit(1);  // Exit jika tidak bisa connect ke MongoDB
+  try {
+    const mongoURI = process.env.MONGODB_URI;
+    if (!mongoURI) {
+      throw new Error('MONGODB_URI is not defined');
     }
+    await mongoose.connect(mongoURI, {
+      serverSelectionTimeoutMS: 5000
+    });
+    console.log('Connected to MongoDB');
+  } catch (error) {
+    console.error('MongoDB connection error:', error);
+    process.exit(1);  // Exit if cannot connect to MongoDB
+  }
 };
 
 // Start server
 const startServer = async () => {
   await connectToMongoDB();
 
-  const port = process.env.PORT || 8080; // Gunakan 8080 sebagai default
+  const port = process.env.PORT || 8080; // Use 8080 as default
   app.listen(port, "0.0.0.0", () => {
-    // Bind ke 0.0.0.0
+    // Bind to 0.0.0.0
     console.log(`Server is running on port ${port}`);
   });
 };
