@@ -8,6 +8,7 @@ import nodemailer from "nodemailer";
 import User from "../models/User.js";
 import authenticateToken from "../middleware/authenticateToken.js";
 
+
 const router = express.Router();
 const upload = multer({
   limits: {
@@ -76,11 +77,28 @@ router.post("/register", async (req, res) => {
       logger: true,
     });
 
+    const htmlContent = `
+      <div style="font-family: Arial, sans-serif; color: #333;">
+        <div style="background-color: #f7f7f7; padding: 20px; text-align: center;">
+          <img src="../img/LogoAIcademy.png" alt="Loket Logo" style="width: 150px; height: auto;">
+        </div>
+        <div style="padding: 20px; border: 1px solid #ddd; border-radius: 5px; margin-top: 10px;">
+          <p>Hi ${name},</p>
+          <p>Tinggal selangkah lagi untuk menyelesaikan proses, mohon konfirmasi dengan memasukkan kode OTP di bawah ini.</p>
+          <div style="text-align: center; font-size: 24px; font-weight: bold; padding: 20px; background-color: #f1f1f1; border-radius: 5px;">
+            ${otp}
+          </div>
+          <p style="color: #666;">Kode ini hanya berlaku selama 10 menit. Jangan pernah membagikan kode OTP kepada siapa pun!</p>
+          <p>Jika ada pertanyaan atau membutuhkan bantuan, silakan hubungi call center kami di +62 821-1723-6590 atau melalui email di <a href="cs@aicade.my.id" style="color: #1a73e8;">cs@aicade.my.id</a>.</p>
+        </div>
+      </div>
+    `;
+
     await transporter.sendMail({
       from: process.env.EMAIL_USER,
       to: email,
       subject: "Welcome to AIcademy",
-      text: `Hi ${name}, welcome to AIcademy!. Your otp is ${user.otp}`,
+      html: htmlContent,
     });
 
     res.status(201).json({
