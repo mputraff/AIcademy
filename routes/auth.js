@@ -273,7 +273,7 @@ router.post("/login", async (req, res) => {
 
       res.json({
         status: "success",
-        message: "Login successfully",
+        message: `User ${user.name} logged in successfully`,
         token,
         data: {
           id: user._id,
