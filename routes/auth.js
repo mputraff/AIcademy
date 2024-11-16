@@ -79,7 +79,7 @@ router.post("/register", async (req, res) => {
     const htmlContent = `
       <div style="font-family: Arial, sans-serif; color: #333;">
         <div style="background-color: #f7f7f7; padding: 20px; text-align: center;">
-          <img src="../img/Aicademy.jpg" alt="Loket Logo" style="width: auto; height: 100px;">
+          <img src="https://res.cloudinary.com/dtonikyjm/image/upload/v1731758022/Aicademy_by9ygt.jpg" alt="Aicademy Logo" style="width: auto; height: 100px;">
         </div>
         <div style="padding: 20px; border: 1px solid #ddd; border-radius: 5px; margin-top: 10px;">
           <p>Hi ${name},</p>
