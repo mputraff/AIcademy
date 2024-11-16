@@ -120,6 +120,123 @@ router.post("/register", async (req, res) => {
 
 /**
  * @swagger
+ * /api/auth/users:
+ *   get:
+ *     summary: Retrieve all users
+ *     tags: [Auth]
+ *     responses:
+ *       200:
+ *         description: A list of users
+ *       500:
+ *         description: Error fetching users
+ */
+router.get("/users", authenticateToken, async (req, res) => {
+  try {
+    const users = await User.find(); // Ambil semua user dari database
+    res.status(200).json(users);
+  } catch (error) {
+    console.error("Error fetching users:", error);
+    res.status(500).json({ error: "Error fetching users" });
+  }
+});
+
+/**
+ * @swagger
+ * /api/auth/users/{id}:
+ *   put:
+ *     summary: Update user by ID
+ *     tags: [Auth]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The user ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: User updated successfully
+ *       404:
+ *         description: User not found
+ *       500:
+ *         description: Error updating user
+ */
+router.put("/users/:id", authenticateToken, async (req, res) => {
+  const { id } = req.params;
+  const { name, email, password } = req.body;
+
+  try {
+    const user = await User.findById(id);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    if (name) user.name = name;
+    if (email) user.email = email;
+    if (password) user.password = await bcrypt.hash(password, 10);
+
+    await user.save();
+
+    res.status(200).json({ message: "User updated successfully", user });
+  } catch (error) {
+    console.error("Error updating user:", error);
+    res.status(500).json({ error: "Error updating user" });
+  }
+});
+
+/**
+ * @swagger
+ * /api/auth/users/{id}:
+ *   delete:
+ *     summary: Delete user by ID
+ *     tags: [Auth]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The user ID
+ *     responses:
+ *       200:
+ *         description: User deleted successfully
+ *       404:
+ *         description: User not found
+ *       500:
+ *         description: Error deleting user
+ */
+router.delete("/users/:id", authenticateToken, async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const user = await User.findByIdAndDelete(id);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    res.status(200).json({ message: "User deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting user:", error);
+    res.status(500).json({ error: "Error deleting user" });
+  }
+});
+
+
+/**
+ * @swagger
  * /api/auth/login:
  *   post:
  *     summary: Login a user
