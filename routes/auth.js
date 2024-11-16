@@ -11,7 +11,7 @@ import authenticateToken from "../middleware/authenticateToken.js";
 const router = express.Router();
 const upload = multer({
   limits: {
-    fileSize: 1024 * 1024 * 5,
+    fileSize: 1024 * 1024,
   },
 
   fileFilter(req, file, cb) {
