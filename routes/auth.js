@@ -79,7 +79,7 @@ router.post("/register", async (req, res) => {
     const htmlContent = `
       <div style="font-family: Arial, sans-serif; color: #333;">
         <div style="background-color: #f7f7f7; padding: 20px; text-align: center;">
-          <img src="https://res.cloudinary.com/dtonikyjm/image/upload/v1731758022/Aicademy_by9ygt.jpg" alt="Aicademy Logo" style="width: auto; height: 100px;">
+          <img src="https://res-console.cloudinary.com/dtonikyjm/media_explorer_thumbnails/af6f8ee40f47a7bb67184f063a90a822/detailed" alt="Aicademy Logo" style="width: auto; height: 100px;">
         </div>
         <div style="padding: 20px; border: 1px solid #ddd; border-radius: 5px; margin-top: 10px;">
           <p>Hi ${name},</p>
