@@ -7,7 +7,6 @@ import nodemailer from "nodemailer";
 import User from "../models/User.js";
 import authenticateToken from "../middleware/authenticateToken.js";
 
-
 const router = express.Router();
 const upload = multer({
   limits: {
@@ -47,22 +46,16 @@ const upload = multer({
  *       500:
  *         description: Error registering user
  */
+
+const tempUserStorage = {};
 router.post("/register", async (req, res) => {
   const { name, email, password } = req.body;
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
-    const otp = Math.floor(1000 + Math.random() * 9000); // 6-digit OTP
+    const otp = Math.floor(1000 + Math.random() * 9000);
     const otpExpires = new Date(Date.now() + 10 * 60 * 1000);
 
-    const user = new User({
-      name,
-      email,
-      password: hashedPassword,
-      otp,
-      otpExpires,
-    });
-
-    await user.save();
+    tempUserStorage[email] = { name, hashedPassword, otp, otpExpires };
 
     const transporter = nodemailer.createTransport({
       host: "mail.aicade.my.id",
@@ -102,19 +95,11 @@ router.post("/register", async (req, res) => {
 
     res.status(201).json({
       status: "success",
-      message:
-        "User registered successfully and your otp successfully sent. Please check your email.",
-      data: {
-        id: user._id, // Mengakses _id setelah user disimpan
-        name: user.name,
-        email: user.email,
-        createdAt: user.createdAt,
-        updatedAt: user.updatedAt,
-      },
+      message: "Code otp successfully sent. Please check your email.",
     });
   } catch (error) {
     console.error("Error during registration:", error); // Menampilkan error di console log
-    res.status(500).json({ error: "Error registering user" });
+    res.status(500).json({ error: error.message || "Error registering user" });
   }
 });
 
@@ -234,7 +219,6 @@ router.delete("/users/:id", authenticateToken, async (req, res) => {
   }
 });
 
-
 /**
  * @swagger
  * /api/auth/login:
@@ -263,7 +247,6 @@ router.delete("/users/:id", authenticateToken, async (req, res) => {
 router.post("/login", async (req, res) => {
   const { email, password } = req.body;
   try {
-
     if (email === "cs@aicade.my.id" && password === "aicademy") {
       const token = jwt.sign(
         { role: "admin", email },
@@ -399,21 +382,25 @@ router.post("/verify-otp", async (req, res) => {
   const { email, otp } = req.body;
   try {
     // Find the user by email
-    const user = await User.findOne({ email });
+    const tempUser = tempUserStorage[email];
 
-    if (!user) {
-      return res.status(400).json({ error: "User not found" });
+    if (!tempUser || tempUser.otpExpires < Date.now()) {
+      return res.status(400).json({ error: "OTP expired or invalid" });
     }
 
-    if (user.otp !== otp || user.otpExpires < Date.now()) {
+    if (
+      tempUser.otp !== parseInt(otp, 10) ||
+      tempUser.otpExpires < Date.now()
+    ) {
       return res.status(400).json({ error: "Invalid or expired OTP" });
     }
 
-    // Mark the user as verified
-    user.isVerified = true;
-    user.otp = null; // Clear OTP
-    user.otpExpires = null; // Clear OTP expiry
-   
+    const user = new User({
+      name: tempUser.name,
+      email,
+      password: tempUser.hashedPassword,
+    });
+
     await user.save();
 
     res.status(200).json({ message: "OTP verified successfully" });
