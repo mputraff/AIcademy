@@ -51,7 +51,15 @@ const tempUserStorage = {};
 router.post("/register", async (req, res) => {
   const { name, email, password } = req.body;
   try {
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res
+        .status(409)
+        .json({ error: "Email already exists, use another email" });
+    }
+
     const hashedPassword = await bcrypt.hash(password, 10);
+
     const otp = Math.floor(1000 + Math.random() * 9000);
     const otpExpires = new Date(Date.now() + 10 * 60 * 1000);
 
@@ -112,6 +120,8 @@ router.post("/register", async (req, res) => {
  *     responses:
  *       200:
  *         description: A list of users
+ *       409:
+ *         description: Email already exists
  *       500:
  *         description: Error fetching users
  */
@@ -377,6 +387,8 @@ router.patch(
  *         description: OTP verified successfully
  *       400:
  *         description: Invalid or expired OTP
+ *       409:
+ *         description: Email already exists, use another email
  */
 router.post("/verify-otp", async (req, res) => {
   const { email, otp } = req.body;
@@ -393,6 +405,13 @@ router.post("/verify-otp", async (req, res) => {
       tempUser.otpExpires < Date.now()
     ) {
       return res.status(400).json({ error: "Invalid or expired OTP" });
+    }
+
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res
+        .status(409)
+        .json({ error: "Email already exists, use another email" });
     }
 
     const user = new User({
