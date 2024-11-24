@@ -21,34 +21,6 @@ const upload = multer({
   },
 });
 
-/**
- * @swagger
- * /api/auth/register:
- *   post:
- *     summary: Register a new user
- *     tags: [Auth]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               name:
- *                 type: string
- *               email:
- *                 type: string
- *               password:
- *                 type: string
- *     responses:
- *       201:
- *         description: User registered successfully
- *       409:
- *         description: Email already exists, use another email
- *       500:
- *         description: Error registering user
- */
-
 const tempUserStorage = {};
 router.post("/register", async (req, res) => {
   const { name, email, password } = req.body;
@@ -113,18 +85,7 @@ router.post("/register", async (req, res) => {
   }
 });
 
-/**
- * @swagger
- * /api/auth/users:
- *   get:
- *     summary: Retrieve all users
- *     tags: [Auth]
- *     responses:
- *       200:
- *         description: A list of users
- *       500:
- *         description: Error fetching users
- */
+
 router.get("/users", authenticateToken, async (req, res) => {
   try {
     const users = await User.find(); // Ambil semua user dari database
@@ -135,40 +96,7 @@ router.get("/users", authenticateToken, async (req, res) => {
   }
 });
 
-/**
- * @swagger
- * /api/auth/users/{id}:
- *   put:
- *     summary: Update user by ID
- *     tags: [Auth]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: The user ID
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               name:
- *                 type: string
- *               email:
- *                 type: string
- *               password:
- *                 type: string
- *     responses:
- *       200:
- *         description: User updated successfully
- *       404:
- *         description: User not found
- *       500:
- *         description: Error updating user
- */
+
 router.put("/users/:id", authenticateToken, async (req, res) => {
   const { id } = req.params;
   const { name, email, password } = req.body;
@@ -192,27 +120,7 @@ router.put("/users/:id", authenticateToken, async (req, res) => {
   }
 });
 
-/**
- * @swagger
- * /api/auth/users/{id}:
- *   delete:
- *     summary: Delete user by ID
- *     tags: [Auth]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: The user ID
- *     responses:
- *       200:
- *         description: User deleted successfully
- *       404:
- *         description: User not found
- *       500:
- *         description: Error deleting user
- */
+
 router.delete("/users/:id", authenticateToken, async (req, res) => {
   const { id } = req.params;
 
@@ -229,31 +137,7 @@ router.delete("/users/:id", authenticateToken, async (req, res) => {
   }
 });
 
-/**
- * @swagger
- * /api/auth/login:
- *   post:
- *     summary: Login a user
- *     tags: [Auth]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               email:
- *                 type: string
- *               password:
- *                 type: string
- *     responses:
- *       200:
- *         description: Login successful
- *       401:
- *         description: Invalid credentials
- *       500:
- *         description: Error logging in
- */
+
 router.post("/login", async (req, res) => {
   const { email, password } = req.body;
   try {
@@ -276,7 +160,7 @@ router.post("/login", async (req, res) => {
       const token = jwt.sign(
         { id: user.id, name: user.name },
         process.env.JWT_SECRET,
-        { expiresIn: "1h" } // Token akan kedaluwarsa dalam 1 jam
+        { expiresIn: "1h" } 
       );
 
       res.json({
@@ -300,36 +184,7 @@ router.post("/login", async (req, res) => {
   }
 });
 
-/**
- * @swagger
- * /api/auth/edit-profile:
- *   patch:
- *     summary: Update user profile
- *     tags: [Auth]
- *     requestBody:
- *       required: true
- *       content:
- *         multipart/form-data:
- *           schema:
- *             type: object
- *             properties:
- *               name:
- *                 type: string
- *               email:
- *                 type: string
- *               password:
- *                 type: string
- *               profilePicture:
- *                 type: string
- *                 format: binary
- *     responses:
- *       200:
- *         description: User profile updated successfully
- *       404:
- *         description: User not found
- *       500:
- *         description: Error updating profile
- */
+
 router.patch(
   "/edit-profile",
   authenticateToken,
@@ -365,31 +220,7 @@ router.patch(
   }
 );
 
-/**
- * @swagger
- * /api/auth/verify-otp:
- *   post:
- *     summary: Verify OTP for user registration
- *     tags: [Auth]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               email:
- *                 type: string
- *               otp:
- *                 type: number
- *     responses:
- *       200:
- *         description: OTP verified successfully
- *       400:
- *         description: Invalid or expired OTP
- *       409:
- *         description: Email already exists, use another email
- */
+
 router.post("/verify-otp", async (req, res) => {
   const { email, otp } = req.body;
   try {
