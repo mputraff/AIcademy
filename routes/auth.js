@@ -43,6 +43,8 @@ const upload = multer({
  *     responses:
  *       201:
  *         description: User registered successfully
+ *       409:
+ *         description: Email already exists, use another email
  *       500:
  *         description: Error registering user
  */
@@ -120,8 +122,6 @@ router.post("/register", async (req, res) => {
  *     responses:
  *       200:
  *         description: A list of users
- *       409:
- *         description: Email already exists
  *       500:
  *         description: Error fetching users
  */
