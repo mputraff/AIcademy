@@ -1,0 +1,45 @@
+# Login ke Firebase CLI
+firebase login
+
+# Buat direktori baru untuk proyek
+mkdir firestore-app
+cd firestore-app
+
+# Inisialisasi Firebase di project lokal (ikuti wizard)
+firebase init
+
+# Aktifkan Firestore di Firebase Console (manual melalui UI)
+# 1. Buka https://console.firebase.google.com/
+# 2. Pilih project
+# 3. Klik "Firestore Database" > "Create Database"
+# 4. Pilih "Native Mode"
+
+
+# Unduh service account key dari Firebase Console:
+# 1. Buka Project Settings > Service Accounts > Generate New Private Key (buat nya sebagai owner jangan editor soalnya gabisa edit rulesnya)
+# 2. Unduh file JSON ke dalam direktori proyek
+# 3. Ubah nama file menjadi firebase-service-account.json (opsional) (nanti sesuain di app.js nya buat directory keys nya udh ditandain  )
+
+# Inisialisasi Node.js project
+npm init -y
+
+# Install dependencies
+npm install express firebase-admin
+
+#Tambahain dependecies "type": "module" kalo gaada
+
+# Perbarui aturan Firestore melalui Firebase Console:
+# 1. Buka Firestore Database > Rules
+# 2. Gunakan aturan ini untuk pengujian:
+# --------------------------------------
+# rules_version = '2';
+# service cloud.firestore {
+#   match /databases/{database}/documents {
+#     match /{document=**} {
+#       allow read, write: if true;
+#     }
+#   }
+# }
+# --------------------------------------
+# 3. Klik Publish
+
